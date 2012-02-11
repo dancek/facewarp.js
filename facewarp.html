@@ -5,19 +5,28 @@
   </head>
   <body>
     <script src="lightgl.js"></script>
-    <script>
-var gl = GL.create();
-var mesh = GL.Mesh.plane();
-var shader = new GL.Shader('\
-  void main() {\
-    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\
-  }\
-', '\
-  void main() {\
-    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\
-  }\
-');
+    <script type="x-shader/x-vertex" id="vertex-shader">
+void main() {
+  gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+}
+    </script>
+    <script type="x-shader/x-fragment" id="fragment-shader">
+void main() {
+  gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+}       
+    </script>
 
+    <script>
+// initialize WebGL
+var gl = GL.create();
+
+// create a plane mesh
+var mesh = GL.Mesh.plane();
+
+// initialize shaders from the <script> elements with supplied ids
+var shader = new GL.Shader('vertex-shader', 'fragment-shader');
+
+// drawing
 gl.ondraw = function() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.loadIdentity();
@@ -26,7 +35,10 @@ gl.ondraw = function() {
   shader.draw(mesh);
 }
 
+// use whole window (fullscreen() also conveniently injects a <canvas> element)
 gl.fullscreen();
+
+// start running the onupdate/ondraw loop
 gl.animate();
     </script>
   </body>
