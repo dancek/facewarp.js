@@ -16,7 +16,8 @@ void main() {
 uniform sampler2D texture;
 varying vec2 coord;
 void main() {
-  gl_FragColor = texture2D(texture, coord);
+  vec2 texCoord = vec2(sin(coord.x * 3.14159/2.0), coord.y);
+  gl_FragColor = texture2D(texture, texCoord);
 }       
     </script>
 
