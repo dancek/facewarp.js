@@ -25,7 +25,8 @@ void main() {
 var gl = GL.create();
 
 // create a plane mesh
-var mesh = GL.Mesh.plane();
+// (there's only gl_Vertex buffer by default; `coords` adds gl_TexCoord)
+var mesh = GL.Mesh.plane({coords: true});
 
 // initialize shaders from the <script> elements with supplied ids
 var shader = new GL.Shader('vertex-shader', 'fragment-shader');
