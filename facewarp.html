@@ -6,13 +6,17 @@
   <body>
     <script src="lightgl.js"></script>
     <script type="x-shader/x-vertex" id="vertex-shader">
+varying vec2 coord;      
 void main() {
+  coord = gl_TexCoord.xy;
   gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 }
     </script>
     <script type="x-shader/x-fragment" id="fragment-shader">
+uniform sampler2D texture;
+varying vec2 coord;
 void main() {
-  gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+  gl_FragColor = texture2D(texture, coord);
 }       
     </script>
 
@@ -26,12 +30,17 @@ var mesh = GL.Mesh.plane();
 // initialize shaders from the <script> elements with supplied ids
 var shader = new GL.Shader('vertex-shader', 'fragment-shader');
 
+// load texture
+var texture = new GL.Texture.fromURL("texture.png");
+
+
 // drawing
 gl.ondraw = function() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.loadIdentity();
   gl.translate(0, 0, -5);
   
+  texture.bind(0);
   shader.draw(mesh);
 }
 
