@@ -4,7 +4,30 @@
     <title>facewarp.js demo</title>
   </head>
   <body>
-    <canvas id="face-canvas" width="600" height="600"></canvas>
-    <script src="facewarp.js"></script>
+    <script src="lightgl.js"></script>
+    <script>
+var gl = GL.create();
+var mesh = GL.Mesh.plane();
+var shader = new GL.Shader('\
+  void main() {\
+    gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\
+  }\
+', '\
+  void main() {\
+    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\
+  }\
+');
+
+gl.ondraw = function() {
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  gl.loadIdentity();
+  gl.translate(0, 0, -5);
+  
+  shader.draw(mesh);
+}
+
+gl.fullscreen();
+gl.animate();
+    </script>
   </body>
 </html>
