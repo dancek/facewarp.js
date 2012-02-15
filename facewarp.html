@@ -19,16 +19,14 @@ uniform sampler2D texture;
 varying vec2 coord;
 void main() {
   vec4 raw = texture2D(storage, coord);
-  vec2 texCoord = vec2(raw.r + raw.g/256.0, raw.b + raw.a/256.0);
-  //vec2 texCoord = vec2(raw.r, raw.b);
+  vec2 texCoord = raw.st;
   gl_FragColor = texture2D(texture, texCoord);
 }       
     </script>
     <script type="x-shader/x-fragment" id="fs-init">
 varying vec2 coord;
 void main() {
-  gl_FragColor = vec4(coord.x, 256.0 * mod(coord.x, 256.0),
-                      coord.y, 256.0 * mod(coord.y, 256.0));  
+  gl_FragColor = vec4(coord.x, coord.y, 0, 0);  
 }
     </script>
     <script type="x-shader/x-fragment" id="fs-update">
