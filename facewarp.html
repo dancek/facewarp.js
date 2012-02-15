@@ -31,10 +31,12 @@ void main() {
     </script>
     <script type="x-shader/x-fragment" id="fs-update">
 uniform sampler2D storage;
+uniform vec2 pos;
+uniform vec2 delta;
 varying vec2 coord;
 void main() {
   vec4 cur = texture2D(storage, coord);
-  gl_FragColor = vec4(cur.ba, cur.rg);  
+  gl_FragColor = vec4(cur.s + delta.x, cur.t + delta.y, 0, 0);  
 }
     </script>
 
@@ -58,18 +60,29 @@ var texture = new GL.Texture.fromURL("pattern.jpg");
 var storage = new GL.Texture(texture.width, texture.height);
 //var storage = new GL.Texture(1024, 1024);
 
+// face properties
+var face = {
+  width: gl.canvas.width,
+  height: gl.canvas.height
+};
+
 storage.drawTo(function() {
   storageInitShader.draw(mesh);
 });
 
-// update
-gl.onupdate = function() {
-  return; // disable update for now
-  // update the storage
-  storage.drawTo(function() {
-    storage.bind(0);
-    storageUpdateShader.draw(mesh);
-  });
+// dragging handler
+gl.onmousemove = function(e) {
+  if (e.dragging) {
+    // update the storage
+    storage.drawTo(function() {
+      storage.bind(0);
+      storageUpdateShader.uniforms({
+        pos: [e.x / face.width, e.y / face.height],
+        delta: [-e.deltaX / face.width, e.deltaY / face.height],
+        storage: 0
+      }).draw(mesh);
+    });
+  }
 }
 
 // drawing
