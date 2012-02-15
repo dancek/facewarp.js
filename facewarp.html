@@ -5,20 +5,27 @@
   </head>
   <body>
     <script src="lightgl.js"></script>
-    <script type="x-shader/x-vertex" id="vertex-shader">
+    <script type="x-shader/x-vertex" id="vs-coords">
 varying vec2 coord;      
 void main() {
   coord = gl_TexCoord.xy;
   gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 }
     </script>
-    <script type="x-shader/x-fragment" id="fragment-shader">
+    <script type="x-shader/x-fragment" id="fs-warp">
 uniform sampler2D texture;
 varying vec2 coord;
 void main() {
   vec2 texCoord = vec2(sin(coord.x * 3.14159/2.0), coord.y);
   gl_FragColor = texture2D(texture, texCoord);
 }       
+    </script>
+    <script type="x-shader/x-fragment" id="fs-init">
+uniform sampler2D texture;
+varying vec2 coord;
+void main() {
+    gl_FragColor = vec4(coord.x, mod(coord.x, 256.0), coord.y, mod(coord.y, 256.0));  
+}
     </script>
 
     <script>
@@ -30,11 +37,20 @@ var gl = GL.create();
 var mesh = GL.Mesh.plane({coords: true});
 
 // initialize shaders from the <script> elements with supplied ids
-var shader = new GL.Shader('vertex-shader', 'fragment-shader');
+var warpShader = new GL.Shader('vs-coords', 'fs-warp');
+var storageInitShader = new GL.Shader('vs-coords', 'fs-init');
+//var storageUpdateShader = new GL.Shader('vs-coords', 'fs-update');
 
 // load texture
 var texture = new GL.Texture.fromURL("texture.png");
 
+// create storage (actually a texture) for texture coordinates
+var storage = new GL.Texture(texture.width, texture.height);
+
+storage.drawTo(function() {
+  //storage.bind(0);
+  storageInitShader.draw(mesh);
+});
 
 // drawing
 gl.ondraw = function() {
@@ -42,8 +58,8 @@ gl.ondraw = function() {
   gl.loadIdentity();
   gl.translate(0, 0, -5);
   
-  texture.bind(0);
-  shader.draw(mesh);
+  storage.bind(0);
+  warpShader.draw(mesh);
 }
 
 // use whole window (fullscreen() also conveniently injects a <canvas> element)
