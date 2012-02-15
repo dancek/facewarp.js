@@ -14,17 +14,21 @@ void main() {
 }
     </script>
     <script type="x-shader/x-fragment" id="fs-warp">
+uniform sampler2D storage;
 uniform sampler2D texture;
 varying vec2 coord;
 void main() {
-  vec2 texCoord = vec2(sin(coord.x * 3.14159/2.0), coord.y);
+  vec4 raw = texture2D(storage, coord);
+  vec2 texCoord = vec2(raw.r + raw.g/256.0, raw.b + raw.a/256.0);
+  //vec2 texCoord = vec2(raw.r, raw.b);
   gl_FragColor = texture2D(texture, texCoord);
 }       
     </script>
     <script type="x-shader/x-fragment" id="fs-init">
 varying vec2 coord;
 void main() {
-  gl_FragColor = vec4(coord.x, mod(coord.x, 256.0), coord.y, mod(coord.y, 256.0));  
+  gl_FragColor = vec4(coord.x, 256.0 * mod(coord.x, 256.0),
+                      coord.y, 256.0 * mod(coord.y, 256.0));  
 }
     </script>
     <script type="x-shader/x-fragment" id="fs-update">
@@ -50,11 +54,11 @@ var storageInitShader = new GL.Shader('vs-coords', 'fs-init');
 var storageUpdateShader = new GL.Shader('vs-coords', 'fs-update');
 
 // load texture
-var texture = new GL.Texture.fromURL("texture.png");
+var texture = new GL.Texture.fromURL("pattern.jpg");
 
 // create storage (actually a texture) for texture coordinates
-//var storage = new GL.Texture(texture.width, texture.height);
-var storage = new GL.Texture(1024, 1024);
+var storage = new GL.Texture(texture.width, texture.height);
+//var storage = new GL.Texture(1024, 1024);
 
 storage.drawTo(function() {
   storageInitShader.draw(mesh);
@@ -62,6 +66,7 @@ storage.drawTo(function() {
 
 // update
 gl.onupdate = function() {
+  return; // disable update for now
   // update the storage
   storage.drawTo(function() {
     storage.bind(0);
@@ -77,7 +82,11 @@ gl.ondraw = function() {
   //gl.translate(0, 0, -2.4);
 
   storage.bind(0);
-  warpShader.draw(mesh);
+  texture.bind(1);
+  warpShader.uniforms({
+    storage: 0,
+    texture: 1
+  }).draw(mesh);
 }
 
 // use whole window (fullscreen() also conveniently injects a <canvas> element)
