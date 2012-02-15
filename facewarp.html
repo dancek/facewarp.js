@@ -31,12 +31,18 @@ void main() {
     </script>
     <script type="x-shader/x-fragment" id="fs-update">
 uniform sampler2D storage;
-uniform vec2 pos;
+uniform vec2 dragPosition;
 uniform vec2 delta;
 varying vec2 coord;
 void main() {
   vec4 cur = texture2D(storage, coord);
-  gl_FragColor = vec4(cur.s + delta.x, cur.t + delta.y, 0, 0);  
+  float dist = distance(cur.xy, dragPosition);
+  float d = 30.0 * dist;
+  float effect = 0.0;
+  if (d < 1.0) {
+    effect = 1.0 - 3.0*d*d + 2.0*d*d*d;
+  }
+  gl_FragColor = vec4(cur.s + effect * delta.x, cur.t + effect * delta.y, 0, 0);  
 }
     </script>
 
@@ -77,7 +83,8 @@ gl.onmousemove = function(e) {
     storage.drawTo(function() {
       storage.bind(0);
       storageUpdateShader.uniforms({
-        pos: [e.x / face.width, e.y / face.height],
+        // dragging parameters
+        dragPosition: [e.x / face.width, 1.0 - e.y / face.height],
         delta: [-e.deltaX / face.width, e.deltaY / face.height],
         storage: 0
       }).draw(mesh);
