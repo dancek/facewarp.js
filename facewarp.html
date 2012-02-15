@@ -35,13 +35,17 @@ uniform vec2 dragPosition;
 uniform vec2 delta;
 varying vec2 coord;
 void main() {
-  vec4 cur = texture2D(storage, coord);
-  float dist = distance(cur.xy, dragPosition);
+  // calculate how strongly this point is affected
+  float dist = distance(coord, dragPosition);
   float d = 30.0 * dist;
   float effect = 0.0;
   if (d < 1.0) {
+    // point selection function: 1 - 3d^2 + 2d^3
     effect = 1.0 - 3.0*d*d + 2.0*d*d*d;
   }
+
+  // move the texture coordinates for this point accordingly
+  vec4 cur = texture2D(storage, coord);
   gl_FragColor = vec4(cur.s + effect * delta.x, cur.t + effect * delta.y, 0, 0);  
 }
     </script>
@@ -60,7 +64,7 @@ var storageInitShader = new GL.Shader('vs-coords', 'fs-init');
 var storageUpdateShader = new GL.Shader('vs-coords', 'fs-update');
 
 // load texture
-var texture = new GL.Texture.fromURL("pattern.jpg");
+var texture = new GL.Texture.fromURL("face.jpg");
 
 // create storage (actually a texture) for texture coordinates
 var storage = new GL.Texture(texture.width, texture.height);
@@ -79,6 +83,8 @@ storage.drawTo(function() {
 // dragging handler
 gl.onmousemove = function(e) {
   if (e.dragging) {
+    // TODO: do this with two textures, as rendering to the same texture
+    // is undefined behaviour
     // update the storage
     storage.drawTo(function() {
       storage.bind(0);
