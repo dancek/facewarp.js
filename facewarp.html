@@ -83,6 +83,7 @@ image.onload = function() {
   context.viewport(0, 0, context.canvas.width, context.canvas.height);
   // inject the canvas into DOM
   document.body.appendChild(context.canvas);
+  draw();
 };
 image.src = "face.jpg";
 
@@ -98,6 +99,7 @@ var face = {
   height: function() { return gl.canvas.height }
 };
 
+// initialize storage
 storage1.drawTo(function() {
   storageInitShader.draw(mesh);
 });
@@ -118,11 +120,12 @@ gl.onmousemove = function(e) {
     var tmp = storage1;
     storage1 = storage2;
     storage2 = tmp;
+    draw();
   }
 }
 
 // drawing
-gl.ondraw = function() {
+draw = function() {
   
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.loadIdentity();
@@ -135,9 +138,6 @@ gl.ondraw = function() {
     texture: 1
   }).draw(mesh);
 }
-
-// start running the onupdate/ondraw loop
-gl.animate();
     </script>
   </body>
 </html>
