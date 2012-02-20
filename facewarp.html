@@ -113,8 +113,8 @@ gl.ondraw = function() {
   }).draw(mesh);
 }
 
-// use whole window (fullscreen() also conveniently injects a <canvas> element)
-gl.fullscreen();
+// inject the canvas into DOM
+document.body.appendChild(gl.canvas);
 
 // start running the onupdate/ondraw loop
 gl.animate();
