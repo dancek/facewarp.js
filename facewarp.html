@@ -72,8 +72,8 @@ var storage = new GL.Texture(texture.width, texture.height);
 
 // face properties
 var face = {
-  width: gl.canvas.width,
-  height: gl.canvas.height
+  width: function() { return gl.canvas.width },
+  height: function() { return gl.canvas.height }
 };
 
 storage.drawTo(function() {
@@ -90,8 +90,8 @@ gl.onmousemove = function(e) {
       storage.bind(0);
       storageUpdateShader.uniforms({
         // dragging parameters
-        dragPosition: [e.x / face.width, 1.0 - e.y / face.height],
-        delta: [-e.deltaX / face.width, e.deltaY / face.height],
+        dragPosition: [e.x / face.width(), 1.0 - e.y / face.height()],
+        delta: [-e.deltaX / face.width(), e.deltaY / face.height()],
         storage: 0
       }).draw(mesh);
     });
@@ -113,6 +113,10 @@ gl.ondraw = function() {
   }).draw(mesh);
 }
 
+// set canvas to be as high as the window, and use image aspect ratio for width
+gl.canvas.height = window.innerHeight;
+gl.canvas.width = texture.width / texture.height * gl.canvas.height;
+gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 // inject the canvas into DOM
 document.body.appendChild(gl.canvas);
 
