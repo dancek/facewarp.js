@@ -36,10 +36,11 @@ uniform vec2 dragPosition;
 uniform vec2 delta;
 varying vec2 coord;
 const float scale = 0.2;
+const float maxDist = 0.05;
 void main() {
   // calculate how strongly this point is affected
   float dist = distance(coord, dragPosition);
-  float d = 30.0 * dist;
+  float d = dist / maxDist;
   float effect = 0.0;
   if (d < 1.0) {
     // point selection function: 1 - 3d^2 + 2d^3
