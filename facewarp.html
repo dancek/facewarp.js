@@ -17,31 +17,37 @@ void main() {
 uniform sampler2D storage;
 uniform sampler2D texture;
 varying vec2 coord;
+const float scale = 0.2;
 void main() {
   vec4 raw = texture2D(storage, coord);
-  vec2 texCoord = raw.st;
+  vec2 texCoord = vec2(coord.x + scale * (raw.s - 0.5), coord.y + scale * (raw.t - 0.5));
   gl_FragColor = texture2D(texture, texCoord);
 }       
     </script>
     <script type="x-shader/x-fragment" id="fs-init">
 varying vec2 coord;
 void main() {
-  gl_FragColor = vec4(coord.x, coord.y, 0, 0);  
+  gl_FragColor = vec4(0.5, 0.5, 0, 0);  
 }
     </script>
     <script type="x-shader/x-fragment" id="fs-update">
+#define PI 3.141592653589793238462643383279      
+
 uniform sampler2D storage;
 uniform vec2 dragPosition;
 uniform vec2 delta;
 varying vec2 coord;
+const float scale = 0.2;
+const float maxDist = 0.05;
+
 void main() {
   // calculate how strongly this point is affected
   float dist = distance(coord, dragPosition);
-  float d = 30.0 * dist;
+  float d = dist / maxDist;
   float effect = 0.0;
   if (d < 1.0) {
-    // point selection function: 1 - 3d^2 + 2d^3
-    effect = 1.0 - 3.0*d*d + 2.0*d*d*d;
+    // point selection function: (1 - 3d^2 + 2d^3) * cos(d*PI/2)
+    effect = (1.0 - 3.0*d*d + 2.0*d*d*d) * cos(PI/2.0*d) / scale;
   }
 
   // move the texture coordinates for this point accordingly
@@ -63,61 +69,75 @@ var warpShader = new GL.Shader('vs-coords', 'fs-warp');
 var storageInitShader = new GL.Shader('vs-coords', 'fs-init');
 var storageUpdateShader = new GL.Shader('vs-coords', 'fs-update');
 
-// load texture
-var texture = new GL.Texture.fromURL("face.jpg");
+// create texture
+var texture = new GL.Texture();
+var image = new Image();
+var context = gl;
+// load image asynchronously
+image.onload = function() {
+  context.makeCurrent();
+  GL.Texture.fromImage(image).swapWith(texture);
+  // set canvas to be as high as the window, and use image aspect ratio for width
+  context.canvas.height = window.innerHeight;
+  context.canvas.width = image.width / image.height * context.canvas.height;
+  context.viewport(0, 0, context.canvas.width, context.canvas.height);
+  // inject the canvas into DOM
+  document.body.appendChild(context.canvas);
+  draw();
+};
+image.src = "face.jpg";
+
 
 // create storage (actually a texture) for texture coordinates
-var storage = new GL.Texture(texture.width, texture.height);
-//var storage = new GL.Texture(1024, 1024);
+// two similar textures are needed because rendering to the same texture is undefined behavior
+var storage1 = new GL.Texture(512, 512, {filter: gl.LINEAR});
+var storage2 = new GL.Texture(512, 512, {filter: gl.LINEAR});
 
 // face properties
 var face = {
-  width: gl.canvas.width,
-  height: gl.canvas.height
+  width: function() { return gl.canvas.width },
+  height: function() { return gl.canvas.height }
 };
 
-storage.drawTo(function() {
+// initialize storage
+storage1.drawTo(function() {
   storageInitShader.draw(mesh);
 });
 
 // dragging handler
 gl.onmousemove = function(e) {
   if (e.dragging) {
-    // TODO: do this with two textures, as rendering to the same texture
-    // is undefined behaviour
-    // update the storage
-    storage.drawTo(function() {
-      storage.bind(0);
+    // update the storage (and swap storage[12] afterwards)
+    storage2.drawTo(function() {
+      storage1.bind(0);
       storageUpdateShader.uniforms({
         // dragging parameters
-        dragPosition: [e.x / face.width, 1.0 - e.y / face.height],
-        delta: [-e.deltaX / face.width, e.deltaY / face.height],
+        dragPosition: [e.x / face.width(), 1.0 - e.y / face.height()],
+        delta: [-e.deltaX / face.width(), e.deltaY / face.height()],
         storage: 0
       }).draw(mesh);
     });
+    var tmp = storage1;
+    storage1 = storage2;
+    storage2 = tmp;
+    draw();
   }
 }
 
 // drawing
-gl.ondraw = function() {
+draw = function() {
   
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.loadIdentity();
   //gl.translate(0, 0, -2.4);
 
-  storage.bind(0);
+  storage1.bind(0);
   texture.bind(1);
   warpShader.uniforms({
     storage: 0,
     texture: 1
   }).draw(mesh);
 }
-
-// inject the canvas into DOM
-document.body.appendChild(gl.canvas);
-
-// start running the onupdate/ondraw loop
-gl.animate();
     </script>
   </body>
 </html>
