@@ -31,20 +31,23 @@ void main() {
 }
     </script>
     <script type="x-shader/x-fragment" id="fs-update">
+#define PI 3.141592653589793238462643383279      
+
 uniform sampler2D storage;
 uniform vec2 dragPosition;
 uniform vec2 delta;
 varying vec2 coord;
 const float scale = 0.2;
 const float maxDist = 0.05;
+
 void main() {
   // calculate how strongly this point is affected
   float dist = distance(coord, dragPosition);
   float d = dist / maxDist;
   float effect = 0.0;
   if (d < 1.0) {
-    // point selection function: 1 - 3d^2 + 2d^3
-    effect = (1.0 - 3.0*d*d + 2.0*d*d*d) / scale;
+    // point selection function: (1 - 3d^2 + 2d^3) * cos(d*PI/2)
+    effect = (1.0 - 3.0*d*d + 2.0*d*d*d) * cos(PI/2.0*d) / scale;
   }
 
   // move the texture coordinates for this point accordingly
