@@ -17,16 +17,17 @@ void main() {
 uniform sampler2D storage;
 uniform sampler2D texture;
 varying vec2 coord;
+const float scale = 0.2;
 void main() {
   vec4 raw = texture2D(storage, coord);
-  vec2 texCoord = raw.st;
+  vec2 texCoord = vec2(coord.x + scale * (raw.s - 0.5), coord.y + scale * (raw.t - 0.5));
   gl_FragColor = texture2D(texture, texCoord);
 }       
     </script>
     <script type="x-shader/x-fragment" id="fs-init">
 varying vec2 coord;
 void main() {
-  gl_FragColor = vec4(coord.x, coord.y, 0, 0);  
+  gl_FragColor = vec4(0.5, 0.5, 0, 0);  
 }
     </script>
     <script type="x-shader/x-fragment" id="fs-update">
@@ -34,6 +35,7 @@ uniform sampler2D storage;
 uniform vec2 dragPosition;
 uniform vec2 delta;
 varying vec2 coord;
+const float scale = 0.2;
 void main() {
   // calculate how strongly this point is affected
   float dist = distance(coord, dragPosition);
@@ -41,7 +43,7 @@ void main() {
   float effect = 0.0;
   if (d < 1.0) {
     // point selection function: 1 - 3d^2 + 2d^3
-    effect = 1.0 - 3.0*d*d + 2.0*d*d*d;
+    effect = (1.0 - 3.0*d*d + 2.0*d*d*d) / scale;
   }
 
   // move the texture coordinates for this point accordingly
