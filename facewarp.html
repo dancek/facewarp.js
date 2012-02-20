@@ -88,7 +88,9 @@ image.src = "face.jpg";
 
 
 // create storage (actually a texture) for texture coordinates
-var storage = new GL.Texture(1024, 1024, {filter: gl.LINEAR});
+// two similar textures are needed because rendering to the same texture is undefined behavior
+var storage1 = new GL.Texture(512, 512, {filter: gl.LINEAR});
+var storage2 = new GL.Texture(512, 512, {filter: gl.LINEAR});
 
 // face properties
 var face = {
@@ -96,18 +98,16 @@ var face = {
   height: function() { return gl.canvas.height }
 };
 
-storage.drawTo(function() {
+storage1.drawTo(function() {
   storageInitShader.draw(mesh);
 });
 
 // dragging handler
 gl.onmousemove = function(e) {
   if (e.dragging) {
-    // TODO: do this with two textures, as rendering to the same texture
-    // is undefined behaviour
-    // update the storage
-    storage.drawTo(function() {
-      storage.bind(0);
+    // update the storage (and swap storage[12] afterwards)
+    storage2.drawTo(function() {
+      storage1.bind(0);
       storageUpdateShader.uniforms({
         // dragging parameters
         dragPosition: [e.x / face.width(), 1.0 - e.y / face.height()],
@@ -115,6 +115,9 @@ gl.onmousemove = function(e) {
         storage: 0
       }).draw(mesh);
     });
+    var tmp = storage1;
+    storage1 = storage2;
+    storage2 = tmp;
   }
 }
 
@@ -125,7 +128,7 @@ gl.ondraw = function() {
   gl.loadIdentity();
   //gl.translate(0, 0, -2.4);
 
-  storage.bind(0);
+  storage1.bind(0);
   texture.bind(1);
   warpShader.uniforms({
     storage: 0,
