@@ -66,10 +66,10 @@ var storageInitShader = new GL.Shader('vs-coords', 'fs-init');
 var storageUpdateShader = new GL.Shader('vs-coords', 'fs-update');
 
 // load texture
-var texture = new GL.Texture.fromURL("face.jpg");
+var texture = new GL.Texture.fromURL("face.jpg", {filter: gl.LINEAR});
 
 // create storage (actually a texture) for texture coordinates
-var storage = new GL.Texture(1024, 1024);
+var storage = new GL.Texture(1024, 1024, {filter: gl.LINEAR});
 
 // face properties
 var face = {
